@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: GATEWAY-SERVICE
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/ms1/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: fetchIngredients1
+                fallbackUri: forward:/orderFallBack
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+              - Path=/ms2/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: fetchIngredients2
+                fallbackUri: forward:/paymentfallback
+server:
+  port: 8989
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 3000
